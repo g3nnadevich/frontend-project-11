@@ -1,14 +1,16 @@
-import './style.css'
 import * as yup from 'yup'
 import { proxy, subscribe, snapshot } from 'valtio/vanilla'
+
+import './style.css'
 import initView from './view.js'
+import { i18nextPromise, i18nextInstance } from './i18n.js'
 
 const state = proxy({
-    feeds: [],
-    form: {
-      status: null,
-      error: null,
-    },
+  feeds: [],
+  form: {
+    status: null,
+    error: null,
+  },
 })
 
 const elements = {
@@ -19,16 +21,18 @@ const elements = {
 
 const { form, input } = elements
 
+const createSchema = () => {
+  return yup
+    .string()
+    .required()
+    .url()
+    .notOneOf(state.feeds)
+}
+
 form.addEventListener('submit', (e) => {
   e.preventDefault()
 
-  const schema = yup
-  .string()
-  .required('Не должно быть пустым')
-  .url('Ссылка должна быть валидным URL')
-  .notOneOf(state.feeds, 'RSS уже существует')
-
-  schema.validate(input.value)
+  createSchema().validate(input.value)
     .then(() => {
       state.feeds.push(input.value)
       state.form.status = 'valid'
@@ -41,4 +45,16 @@ form.addEventListener('submit', (e) => {
     }) 
 })
 
-initView(state, elements)
+i18nextPromise
+  .then(() => {
+    yup.setLocale({
+      mixed: {
+        required: () => i18nextInstance.t('errors.required'),
+        notOneOf: () => i18nextInstance.t('errors.duplicate')
+      },
+      string: {
+        url: () => i18nextInstance.t('errors.invalidUrl'),
+      },
+    })
+    initView(state, elements)
+  })

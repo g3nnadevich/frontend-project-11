@@ -1,3 +1,4 @@
+import { i18nextInstance } from './i18n.js'
 import { subscribe, snapshot } from 'valtio/vanilla'
 
 const render = (state, elements) => {
@@ -10,7 +11,7 @@ const render = (state, elements) => {
 
   if (snap.form.status === 'valid') {
     feedback.classList.add('text-success')
-    feedback.textContent = 'RSS успешно загружен'
+    feedback.textContent = i18nextInstance.t('loaded.success')
   }
 
   if (snap.form.status === 'error') {
