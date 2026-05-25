@@ -1,5 +1,5 @@
 import * as yup from 'yup'
-import { proxy, subscribe, snapshot } from 'valtio/vanilla'
+import { proxy } from 'valtio/vanilla'
 
 import './style.css'
 import initView from './view.js'
