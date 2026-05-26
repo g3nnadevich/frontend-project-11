@@ -1,5 +1,6 @@
 import * as yup from 'yup'
 import { proxy } from 'valtio/vanilla'
+import axios from 'axios'
 
 import './style.css'
 import initView from './view.js'
@@ -17,6 +18,7 @@ const elements = {
   form: document.querySelector('form'),
   input: document.querySelector('input'),
   feedback: document.querySelector('.feedback'),
+  feeds: document.querySelector('.feeds'),
 }
 
 const { form, input } = elements
@@ -26,15 +28,27 @@ const createSchema = () => {
     .string()
     .required()
     .url()
-    .notOneOf(state.feeds)
+    .notOneOf(state.feeds.map(feed => feed.url))
 }
 
-form.addEventListener('submit', (e) => {
-  e.preventDefault()
+const validate = (url) => {
+  return createSchema().validate(url)
+}
 
-  createSchema().validate(input.value)
-    .then(() => {
-      state.feeds.push(input.value)
+const loadRss = (url) => {
+  return axios
+    .get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
+    .then((res) => res.data.contents)
+}
+
+const addFeed = (url) => {
+  validate(url)
+    .then(() => loadRss(url))
+    .then((data) => {
+      state.feeds.push({
+        url: url,
+        text: data,
+      })
       state.form.status = 'valid'
       state.form.error = null
       input.value = ''
@@ -43,8 +57,15 @@ form.addEventListener('submit', (e) => {
       state.form.status = 'error'
       state.form.error = error.message
     }) 
+}
+
+//Кнопка "добавить"
+form.addEventListener('submit', (e) => {
+  e.preventDefault()
+  addFeed(input.value)
 })
 
+//Запуск приложения
 i18nextPromise
   .then(() => {
     yup.setLocale({
