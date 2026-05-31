@@ -5,13 +5,20 @@ import axios from 'axios'
 import './style.css'
 import initView from './view.js'
 import { i18nextPromise, i18nextInstance } from './i18n.js'
+import parse from './parser.js'
+import validate from './validator.js'
 
 const state = proxy({
-  feeds: [],
   form: {
-    status: null,
+    status: 'filling', // 'filling' | 'invalid' | 'valid'
     error: null,
   },
+  loadingProcess: {
+    status: 'idle', // 'idle' | 'loading' | 'success' | 'failed'
+    error: null,
+  },
+  feeds: [],
+  posts: [],
 })
 
 const elements = {
@@ -19,42 +26,70 @@ const elements = {
   input: document.querySelector('input'),
   feedback: document.querySelector('.feedback'),
   feeds: document.querySelector('.feeds'),
+  posts: document.querySelector('.posts'),
+  submitButton: document.querySelector('[data-submit-button]')
 }
-
 const { form, input } = elements
 
-const createSchema = () => {
-  return yup
-    .string()
-    .required()
-    .url()
-    .notOneOf(state.feeds.map(feed => feed.url))
-}
-
-const validate = (url) => {
-  return createSchema().validate(url)
-}
-
+// запрос на сервер через прокси
 const loadRss = (url) => {
+  state.loadingProcess.status = 'loading'
+  state.loadingProcess.error = null
+
+  const proxyUrl = 'https://allorigins.hexlet.app/get'
+
   return axios
-    .get(`https://allorigins.hexlet.app/get?url=${encodeURIComponent(url)}`)
-    .then((res) => res.data.contents)
+    .get(proxyUrl, {
+      params: {
+        url,
+        disableCache: 'true',
+      },
+    })
+    .then(res => {
+      state.loadingProcess.status = 'success'
+      return res.data.contents
+    })
+    .catch(err => {
+      state.loadingProcess.status = 'failed'
+      state.loadingProcess.error = err.message
+      throw err
+    })
 }
 
-const addFeed = (url) => {
-  validate(url)
-    .then(() => loadRss(url))
-    .then((data) => {
-      state.feeds.push({
-        url: url,
-        text: data,
-      })
+const addFeed = (feed, url) => {
+  const { title, description, posts } = parse(feed)
+  const feedId = crypto.randomUUID()
+
+  state.feeds.push({
+    id: feedId,
+    url,
+    title,
+    description,
+  })
+
+  posts.forEach(post => {
+    state.posts.push({
+      id: crypto.randomUUID(),
+      feedId,
+      title: post.title,
+      description: post.description,
+      link: post.link,
+    })
+  })
+}
+
+const handleAddFeed = (url) => {
+  validate(url, state.feeds)
+    .then(() => {
       state.form.status = 'valid'
       state.form.error = null
-      input.value = ''
+      return loadRss(url)
+    })
+    .then((data) => {
+      addFeed(data, url)
     })
     .catch((error)=> {
-      state.form.status = 'error'
+      state.form.status = 'invalid'
       state.form.error = error.message
     }) 
 }
@@ -62,7 +97,7 @@ const addFeed = (url) => {
 //Кнопка "добавить"
 form.addEventListener('submit', (e) => {
   e.preventDefault()
-  addFeed(input.value)
+  handleAddFeed(input.value)
 })
 
 //Запуск приложения
