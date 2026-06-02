@@ -33,11 +33,7 @@ const { form, input } = elements
 
 // запрос на сервер через прокси
 const loadRss = (url) => {
-  state.loadingProcess.status = 'loading'
-  state.loadingProcess.error = null
-
   const proxyUrl = 'https://allorigins.hexlet.app/get'
-
   return axios
     .get(proxyUrl, {
       params: {
@@ -45,19 +41,11 @@ const loadRss = (url) => {
         disableCache: 'true',
       },
     })
-    .then(res => {
-      state.loadingProcess.status = 'success'
-      return res.data.contents
-    })
-    .catch(err => {
-      state.loadingProcess.status = 'failed'
-      state.loadingProcess.error = err.message
-      throw err
-    })
+    .then(res => res.data.contents)
 }
 
-const addFeed = (feed, url) => {
-  const { title, description, posts } = parse(feed)
+const addFeed = (data, url) => {
+  const { title, description, posts } = data
   const feedId = crypto.randomUUID()
 
   state.feeds.push({
@@ -78,20 +66,39 @@ const addFeed = (feed, url) => {
   })
 }
 
+const getLoadingProcessError = (error) => {
+  if (error.message === 'parseError') {
+    return 'parseError'
+  }
+  if (error.isAxiosError) {
+    return 'loadError'
+  }
+  return 'unknownError'
+}
+
 const handleAddFeed = (url) => {
   validate(url, state.feeds)
     .then(() => {
       state.form.status = 'valid'
-      state.form.error = null
+      state.loadingProcess.status = 'loading'
+      state.loadingProcess.error = null
       return loadRss(url)
     })
     .then((data) => {
-      addFeed(data, url)
+      const parsed = parse(data)
+      addFeed(parsed, url)
+      state.loadingProcess.status = 'success'
     })
-    .catch((error)=> {
-      state.form.status = 'invalid'
-      state.form.error = error.message
-    }) 
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        state.form.status = 'invalid'
+        state.form.error = error.message
+        state.loadingProcess.status = 'idle'
+        return
+      }
+      state.loadingProcess.status = 'failed'
+      state.loadingProcess.error = getLoadingProcessError(error)
+    })
 }
 
 //Кнопка "добавить"

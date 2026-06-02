@@ -4,10 +4,13 @@ export default {
       required: 'Не должно быть пустым',
       invalidUrl: 'Ссылка должна быть валидным URL',
       duplicate: 'RSS уже существует',
-      load: 'Сервер не отвечает',
+      loadError: 'Сервер не отвечает',
+      parseError: 'Ресурс не содержит валидный RSS',
+      unknownError: 'Неизвестная ошибка',
     },
     loaded: {
       success: 'RSS успешно загружен',
+      load: 'Загрузка...'
     },
     feeds: 'Фиды',
     posts: 'Посты',

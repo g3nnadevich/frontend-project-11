@@ -105,18 +105,18 @@ export default (state, elements) => {
     }
     // Загрузка
     if (loadingProcess.status === 'loading') {
-      feedback.textContent = 'Loading...'
+      feedback.textContent = i18nextInstance.t('loaded.load')
       return
     }
     // Ошибка сервера
     if (loadingProcess.status === 'failed') {
-      feedback.textContent = loadingProcess.error
+      feedback.textContent = i18nextInstance.t(`errors.${loadingProcess.error}`)
       feedback.classList.add('text-danger')
       return
     }
     // Успех
     if (loadingProcess.status === 'success') {
-      feedback.textContent = 'RSS успешно загружен'
+      feedback.textContent = i18nextInstance.t('loaded.success')
       feedback.classList.add('text-success')
       input.value = ''
       input.focus()
