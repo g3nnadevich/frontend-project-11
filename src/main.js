@@ -7,7 +7,7 @@ import initView from './view.js'
 import { i18nextPromise, i18nextInstance } from './i18n.js'
 import parse from './parser.js'
 import validate from './validator.js'
-
+// State
 const state = proxy({
   form: {
     status: 'filling', // 'filling' | 'invalid' | 'valid'
@@ -19,18 +19,21 @@ const state = proxy({
   },
   feeds: [],
   posts: [],
+  modal: {
+    postId: null,
+  }
 })
-
+// DOM эл-ты
 const elements = {
   form: document.querySelector('form'),
   input: document.querySelector('input'),
   feedback: document.querySelector('.feedback'),
   feeds: document.querySelector('.feeds'),
   posts: document.querySelector('.posts'),
-  submitButton: document.querySelector('[data-submit-button]')
+  submitButton: document.querySelector('[data-submit-button]'),
+  modal: document.querySelector('.modal'),
 }
-const { form, input } = elements
-
+const { form, input, posts } = elements
 // запрос на сервер через прокси
 const loadRss = (url) => {
   const proxyUrl = 'https://allorigins.hexlet.app/get'
@@ -43,7 +46,7 @@ const loadRss = (url) => {
     })
     .then(res => res.data.contents)
 }
-
+// Добавить распарсенный RSS в state
 const addFeed = (data, url) => {
   const { title, description, posts } = data
   const feedId = crypto.randomUUID()
@@ -65,7 +68,7 @@ const addFeed = (data, url) => {
     })
   })
 }
-
+// Обработка ошибок загрузки
 const getLoadingProcessError = (error) => {
   if (error.message === 'parseError') {
     return 'parseError'
@@ -75,7 +78,7 @@ const getLoadingProcessError = (error) => {
   }
   return 'unknownError'
 }
-
+// Обработка добавления фида через форму
 const handleAddFeed = (url) => {
   validate(url, state.feeds)
     .then(() => {
@@ -100,14 +103,43 @@ const handleAddFeed = (url) => {
       state.loadingProcess.error = getLoadingProcessError(error)
     })
 }
-
-//Кнопка "добавить"
+// Обновление постов
+const startUpdatingPosts = () => {
+  const promises = state.feeds.map(feed => {
+    return loadRss(feed.url)
+      .then(parse)
+      .then(data => {
+        const newPosts = data.posts.filter(post => !state.posts.some(p => p.link === post.link))
+        newPosts.forEach(post => {
+          state.posts.unshift({
+            id: crypto.randomUUID(),
+            feedId: feed.id,
+            title: post.title,
+            description: post.description,
+            link: post.link,
+          })
+        })
+      })
+      .catch(err => {
+        console.error(feed.url, err)
+      })
+  })
+  Promise.all(promises)
+    .finally(() => setTimeout(startUpdatingPosts, 5000))
+}
+// Отправка формы
 form.addEventListener('submit', (e) => {
   e.preventDefault()
   handleAddFeed(input.value)
 })
+// Просмотр поста в модальном окне
+posts.addEventListener('click', (e) => {
+  const button = e.target.closest('button[data-id]')
+  if (!button) return
 
-//Запуск приложения
+  state.modal.postId = button.dataset.id
+})
+// Запуск приложения
 i18nextPromise
   .then(() => {
     yup.setLocale({
@@ -120,4 +152,5 @@ i18nextPromise
       },
     })
     initView(state, elements)
+    startUpdatingPosts()
   })

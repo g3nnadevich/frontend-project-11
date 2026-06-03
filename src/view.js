@@ -1,8 +1,10 @@
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+
 import { i18nextInstance } from './i18n.js'
 import { subscribe, snapshot } from 'valtio/vanilla'
 
 export default (state, elements) => {
-  const { input, feedback, feeds, posts, submitButton } = elements
+  const { input, feedback, feeds, posts, submitButton, modal } = elements
 
   const renderFeeds = (state) => {
     if (state.feeds.length === 0) {
@@ -74,8 +76,11 @@ export default (state, elements) => {
       link.rel = 'noopener noreferrer'
 
       const button = document.createElement('button')
-      button.classList.add('btn', 'btn-outline-primary')
       button.type = "button"
+      button.classList.add('btn', 'btn-outline-primary')
+      button.dataset.id = post.id
+      button.dataset.bsToggle = 'modal'
+      button.dataset.bsTarget = '#exampleModal'
       button.textContent = i18nextInstance.t('button')
       
       li.append(link, button)
@@ -105,30 +110,47 @@ export default (state, elements) => {
     }
     // Загрузка
     if (loadingProcess.status === 'loading') {
+      submitButton.disabled = true
+      input.readOnly = true
       feedback.textContent = i18nextInstance.t('loaded.load')
       return
     }
     // Ошибка сервера
     if (loadingProcess.status === 'failed') {
+      submitButton.disabled = false
+      input.readOnly = false
       feedback.textContent = i18nextInstance.t(`errors.${loadingProcess.error}`)
       feedback.classList.add('text-danger')
       return
     }
     // Успех
     if (loadingProcess.status === 'success') {
+      submitButton.disabled = false
+      input.readOnly = false
       feedback.textContent = i18nextInstance.t('loaded.success')
       feedback.classList.add('text-success')
       input.value = ''
       input.focus()
     }
   }
+  //модалка
+  const renderModal = (state) => {
+    const post = state.posts.find(post => post.id === state.modal.postId)
+    if(!post) {
+      return
+    }
 
+    modal.querySelector('.modal-title').textContent = post.title
+    modal.querySelector('.modal-body').textContent = post.description
+  }
+  //
   const render = (state) => {
     renderFeedback(state)
     renderFeeds(state)
     renderPosts(state)
+    renderModal(state)
   }
-
+  //
   subscribe(state, () => render(state))
   render(state)
 }
