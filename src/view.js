@@ -4,7 +4,7 @@ import { i18nextInstance } from './i18n.js'
 import { subscribe, snapshot } from 'valtio/vanilla'
 
 export default (state, elements) => {
-  const { input, feedback, feeds, posts, submitButton, modal } = elements
+  const { input, feedback, feeds, posts, submitButton } = elements
   // рендер фидов
   const renderFeeds = (state) => {
     if (state.feeds.length === 0) {
