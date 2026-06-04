@@ -142,10 +142,9 @@ export default (state, elements) => {
     if(!post) {
       return
     }
-
-    modal.querySelector('.modal-title').textContent = post.title
-    modal.querySelector('.modal-body').textContent = post.description
-    modal.querySelector('.modal-footer a').href = post.link
+    elements.modalTitle.textContent = post.title
+    elements.modalBody.textContent = post.description
+    elements.modalLink.href = post.link
   }
   // рендер страницы
   const render = (state) => {
@@ -155,6 +154,6 @@ export default (state, elements) => {
     renderModal(state)
   }
   // обновление страницы
-  subscribe(state, () => render(state))
+  subscribe(state, () => render(snapshot(state)))
   render(state)
 }
