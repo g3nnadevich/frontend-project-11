@@ -21,7 +21,10 @@ const state = proxy({
   posts: [],
   modal: {
     postId: null,
-  }
+  },
+  ui: {
+    seenPosts: new Set(),
+  },
 })
 // DOM эл-ты
 const elements = {
@@ -132,12 +135,14 @@ form.addEventListener('submit', (e) => {
   e.preventDefault()
   handleAddFeed(input.value)
 })
-// Просмотр поста в модальном окне
+// Предпросмотр поста в модальном окне
 posts.addEventListener('click', (e) => {
   const button = e.target.closest('button[data-id]')
   if (!button) return
 
-  state.modal.postId = button.dataset.id
+  const id = button.dataset.id
+  state.modal.postId = id
+  state.ui.seenPosts.add(id)
 })
 // Запуск приложения
 i18nextPromise

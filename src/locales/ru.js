@@ -4,7 +4,7 @@ export default {
       required: 'Не должно быть пустым',
       invalidUrl: 'Ссылка должна быть валидным URL',
       duplicate: 'RSS уже существует',
-      loadError: 'Сервер не отвечает',
+      loadError: 'Ошибка сети',
       parseError: 'Ресурс не содержит валидный RSS',
       unknownError: 'Неизвестная ошибка',
     },

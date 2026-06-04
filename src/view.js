@@ -5,7 +5,7 @@ import { subscribe, snapshot } from 'valtio/vanilla'
 
 export default (state, elements) => {
   const { input, feedback, feeds, posts, submitButton, modal } = elements
-
+  // рендер фидов
   const renderFeeds = (state) => {
     if (state.feeds.length === 0) {
       feeds.innerHTML = ''
@@ -46,7 +46,7 @@ export default (state, elements) => {
     feeds.innerHTML = ''
     feeds.append(card)
   }
-
+  // рендер постов
   const renderPosts = (state) => {
     if (state.posts.length === 0) {
       posts.innerHTML = ''
@@ -68,13 +68,16 @@ export default (state, elements) => {
     const postItems = state.posts.map(post => {
       const li = document.createElement('li')
       li.classList.add('list-group-item', 'bg-light', 'border-0', 'd-flex', 'justify-content-between')
-
+      // проверка прочитанности
+      const isRead = state.ui.seenPosts.has(post.id)
+      li.classList.add(isRead ? 'fw-normal' : 'fw-bold')
+      // ссылка
       const link = document.createElement('a')
       link.href = post.link
       link.textContent = post.title
       link.target = '_blank'
       link.rel = 'noopener noreferrer'
-
+      // кнопка
       const button = document.createElement('button')
       button.type = "button"
       button.classList.add('btn', 'btn-outline-primary')
@@ -93,7 +96,7 @@ export default (state, elements) => {
     posts.innerHTML = ''
     posts.append(card)
   }
-
+  //рендер статусов и ошибок
   const renderFeedback = (state) => {
     const { form, loadingProcess } = state
 
@@ -133,7 +136,7 @@ export default (state, elements) => {
       input.focus()
     }
   }
-  //модалка
+  //модальное окно
   const renderModal = (state) => {
     const post = state.posts.find(post => post.id === state.modal.postId)
     if(!post) {
@@ -142,15 +145,16 @@ export default (state, elements) => {
 
     modal.querySelector('.modal-title').textContent = post.title
     modal.querySelector('.modal-body').textContent = post.description
+    modal.querySelector('.modal-footer a').href = post.link
   }
-  //
+  // рендер страницы
   const render = (state) => {
     renderFeedback(state)
     renderFeeds(state)
     renderPosts(state)
     renderModal(state)
   }
-  //
+  // обновление страницы
   subscribe(state, () => render(state))
   render(state)
 }
