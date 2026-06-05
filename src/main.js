@@ -1,6 +1,7 @@
 import * as yup from 'yup'
 import { proxy } from 'valtio/vanilla'
 import axios from 'axios'
+import _ from 'lodash'
 
 import './style.css'
 import initView from './view.js'
@@ -55,7 +56,7 @@ const loadRss = (url) => {
 // Добавить распарсенный RSS в state
 const addFeed = (data, url) => {
   const { title, description, posts } = data
-  const feedId = crypto.randomUUID()
+  const feedId = _.uniqueId()
 
   state.feeds.push({
     id: feedId,
@@ -66,7 +67,7 @@ const addFeed = (data, url) => {
 
   posts.forEach(post => {
     state.posts.push({
-      id: crypto.randomUUID(),
+      id: _.uniqueId(),
       feedId,
       title: post.title,
       description: post.description,
