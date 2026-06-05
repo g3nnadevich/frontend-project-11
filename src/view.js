@@ -87,7 +87,7 @@ export default (state, elements) => {
       button.classList.add('btn', 'btn-outline-primary')
       button.dataset.id = post.id
       button.dataset.bsToggle = 'modal'
-      button.dataset.bsTarget = '#exampleModal'
+      button.dataset.bsTarget = '#modal'
       button.textContent = i18nextInstance.t('button')
       
       li.append(link, button)
