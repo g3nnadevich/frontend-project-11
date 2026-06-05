@@ -67,16 +67,20 @@ export default (state, elements) => {
     // посты
     const postItems = state.posts.map(post => {
       const li = document.createElement('li')
-      li.classList.add('list-group-item', 'bg-light', 'border-0', 'd-flex', 'justify-content-between')
-      // проверка прочитанности
-      const isRead = state.ui.seenPosts.has(post.id)
-      li.classList.add(isRead ? 'fw-normal' : 'fw-bold')
+      li.classList.add('list-group-item', 'bg-light', 'border-0', 'border-end-0', 'd-flex', 'justify-content-between', 'align-items-start')
       // ссылка
       const link = document.createElement('a')
       link.href = post.link
       link.textContent = post.title
       link.target = '_blank'
       link.rel = 'noopener noreferrer'
+
+      const isRead = state.ui.seenPosts.has(post.id)
+      const className = isRead
+      ? ['fw-normal', 'link-secondary']
+      : ['fw-bold']
+      link.classList.add(...className)
+      link.dataset.id = post.id
       // кнопка
       const button = document.createElement('button')
       button.type = "button"
